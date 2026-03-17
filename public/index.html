@@ -8,6 +8,11 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    :root {
+      --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       background: #faf9f7;
@@ -25,19 +30,42 @@
       margin-bottom: 2rem;
     }
 
-    .wave { font-size: 3rem; margin-bottom: 0.5rem; }
+    .wave {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+      display: inline-block;
+      animation: wave-hand 0.6s var(--ease-out-quart) 0.3s both;
+      transform-origin: 70% 70%;
+    }
+
+    @keyframes wave-hand {
+      0% { transform: rotate(0deg) scale(0.8); opacity: 0; }
+      30% { transform: rotate(16deg) scale(1); }
+      50% { transform: rotate(-8deg) scale(1); }
+      70% { transform: rotate(10deg) scale(1); }
+      100% { transform: rotate(0deg) scale(1); opacity: 1; }
+    }
 
     .title {
       font-size: 1.6rem;
       font-weight: 600;
       color: #2d2d2d;
       margin-bottom: 0.25rem;
+      opacity: 0;
+      animation: fade-up 0.5s var(--ease-out-quart) 0.15s both;
     }
 
     .subtitle {
       font-size: 1rem;
       color: #888;
       font-weight: 400;
+      opacity: 0;
+      animation: fade-up 0.5s var(--ease-out-quart) 0.25s both;
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .ip-card {
@@ -49,6 +77,8 @@
       max-width: 420px;
       width: 100%;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+      opacity: 0;
+      animation: fade-up 0.5s var(--ease-out-quart) 0.35s both;
     }
 
     .ip-label {
@@ -67,6 +97,25 @@
       letter-spacing: 0.02em;
       margin-bottom: 1.25rem;
       min-height: 2.8rem;
+      transition: opacity 0.3s var(--ease-out-quart);
+    }
+
+    .ip-address.loading {
+      animation: pulse-dots 1.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dots {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    .ip-address.revealed {
+      animation: ip-reveal 0.4s var(--ease-out-expo) both;
+    }
+
+    @keyframes ip-reveal {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
     }
 
     .copy-btn {
@@ -78,22 +127,59 @@
       font-size: 1rem;
       font-weight: 500;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: background 0.2s var(--ease-out-quart),
+                  transform 0.2s var(--ease-out-quart),
+                  box-shadow 0.2s var(--ease-out-quart),
+                  color 0.2s var(--ease-out-quart),
+                  border-color 0.2s var(--ease-out-quart);
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
     }
 
-    .copy-btn:hover { background: #4a7a62; }
-    .copy-btn:disabled { cursor: default; }
+    .copy-btn:hover:not(:disabled):not(.copied) {
+      background: #4a7a62;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(91, 138, 114, 0.25);
+    }
+
+    .copy-btn:active:not(:disabled) {
+      transform: translateY(0) scale(0.97);
+      box-shadow: none;
+    }
+
+    .copy-btn:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
 
     .copy-btn.copied {
       background: #e8f5e9;
       color: #4a7a62;
       border: 1px solid #c8e6c9;
+      animation: copy-success 0.3s var(--ease-out-quart);
     }
 
-    .copy-btn svg { width: 18px; height: 18px; }
+    @keyframes copy-success {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.04); }
+      100% { transform: scale(1); }
+    }
+
+    .copy-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .copy-btn.copied svg polyline {
+      stroke-dasharray: 24;
+      stroke-dashoffset: 24;
+      animation: draw-check 0.35s var(--ease-out-quart) 0.05s forwards;
+    }
+
+    @keyframes draw-check {
+      to { stroke-dashoffset: 0; }
+    }
 
     .error-message {
       font-size: 0.95rem;
@@ -104,6 +190,8 @@
       max-width: 420px;
       width: 100%;
       margin-top: 2.5rem;
+      opacity: 0;
+      animation: fade-up 0.5s var(--ease-out-quart) 0.5s both;
     }
 
     .faq-title {
@@ -121,6 +209,19 @@
       border-radius: 12px;
       padding: 1rem 1.25rem;
       margin-bottom: 0.5rem;
+      transition: transform 0.2s var(--ease-out-quart),
+                  box-shadow 0.2s var(--ease-out-quart);
+      opacity: 0;
+      animation: fade-up 0.4s var(--ease-out-quart) both;
+    }
+
+    .faq-item:nth-child(2) { animation-delay: 0.6s; }
+    .faq-item:nth-child(3) { animation-delay: 0.7s; }
+    .faq-item:nth-child(4) { animation-delay: 0.8s; }
+
+    .faq-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
     }
 
     .faq-q {
@@ -134,6 +235,15 @@
       font-size: 0.9rem;
       color: #777;
       line-height: 1.5;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
     }
   </style>
 </head>
@@ -183,10 +293,13 @@
     var copySVG =
       '<rect x="9" y="9" width="13" height="13" rx="2"/>' +
       '<path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>';
-    var checkSVG = '<polyline points="20 6 9 17 4 12"/>';
+    var checkSVG = '<polyline points="20 6 9 17 4 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
     var errorText = "Couldn\u2019t find your IP address \u2014 try refreshing the page";
 
+    ipDisplay.classList.add("loading");
+
     function showError() {
+      ipDisplay.classList.remove("loading");
       ipDisplay.textContent = errorText;
       ipDisplay.classList.add("error-message");
     }
@@ -197,7 +310,9 @@
         .then(function (data) {
           if (data.ipv4) {
             currentIP = data.ipv4;
+            ipDisplay.classList.remove("loading");
             ipDisplay.textContent = currentIP;
+            ipDisplay.classList.add("revealed");
             copyBtn.disabled = false;
           } else {
             showError();
