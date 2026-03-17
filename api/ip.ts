@@ -9,6 +9,10 @@ function extractIPv4(request: VercelRequest): string | null {
   const raw = Array.isArray(forwarded) ? forwarded[0] : forwarded;
   const ip = raw.split(",")[0].trim();
 
+  if (ip === "::1") {
+    return "127.0.0.1";
+  }
+
   if (ip.startsWith("::ffff:")) {
     return ip.slice(7);
   }
