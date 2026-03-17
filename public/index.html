@@ -237,6 +237,96 @@
       line-height: 1.5;
     }
 
+    .ipv6-toggle {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      max-width: 420px;
+      width: 100%;
+      font-size: 0.88rem;
+      color: #5b8a72;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0.5rem;
+    }
+
+    .ipv6-toggle:hover {
+      text-decoration: underline;
+    }
+
+    .ipv6-panel {
+      max-width: 420px;
+      width: 100%;
+      margin-top: 0.75rem;
+      padding: 1.25rem 1.5rem;
+      background: #f0eeeb;
+      border: 1px solid #e8e5e0;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .ipv6-panel .ip-label {
+      margin-bottom: 0.5rem;
+    }
+
+    .ipv6-address {
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      color: #2d2d2d;
+      word-break: break-all;
+      line-height: 1.4;
+      margin-bottom: 0.9rem;
+    }
+
+    .ipv6-copy-btn {
+      background: transparent;
+      color: #5b8a72;
+      border: 1px solid #5b8a72;
+      border-radius: 8px;
+      padding: 0.5rem 1.2rem;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s var(--ease-out-quart),
+                  transform 0.2s var(--ease-out-quart),
+                  box-shadow 0.2s var(--ease-out-quart),
+                  color 0.2s var(--ease-out-quart);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .ipv6-copy-btn:hover {
+      background: rgba(91, 138, 114, 0.08);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(91, 138, 114, 0.15);
+    }
+
+    .ipv6-copy-btn:active {
+      transform: translateY(0) scale(0.97);
+      box-shadow: none;
+    }
+
+    .ipv6-copy-btn svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .ipv6-copy-btn.copied {
+      background: #e8f5e9;
+      color: #4a7a62;
+      border-color: #c8e6c9;
+    }
+
+    .ipv6-copy-btn.copied svg polyline {
+      stroke-dasharray: 24;
+      stroke-dashoffset: 24;
+      animation: draw-check 0.35s var(--ease-out-quart) 0.05s forwards;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -266,6 +356,22 @@
     </button>
   </div>
 
+  <button class="ipv6-toggle" id="ipv6-toggle" style="visibility: hidden;">
+    Also need your IPv6 address?
+  </button>
+
+  <div class="ipv6-panel" id="ipv6-panel" style="display: none;" role="region" aria-label="IPv6 address">
+    <div class="ip-label">Your IPv6 Address</div>
+    <div class="ipv6-address" id="ipv6-display"></div>
+    <button class="ipv6-copy-btn" id="ipv6-copy-btn">
+      <svg id="ipv6-copy-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <rect x="9" y="9" width="13" height="13" rx="2"/>
+        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+      </svg>
+      <span id="ipv6-copy-text">Copy IPv6</span>
+    </button>
+  </div>
+
   <div class="faq-section">
     <div class="faq-title">Common Questions</div>
     <div class="faq-item">
@@ -278,7 +384,7 @@
     </div>
     <div class="faq-item">
       <div class="faq-q">What's IPv4 vs IPv6?</div>
-      <div class="faq-a">They're just two formats for IP addresses. IPv4 looks like 192.168.1.42 (numbers and dots). IPv6 is a newer, longer format. Most support teams just need your IPv4 address.</div>
+      <div class="faq-a">They're just two formats for IP addresses. IPv4 looks like 192.168.1.42 (numbers and dots). IPv6 is a newer, longer format like 2001:db8::1. Most support teams just need your IPv4 address, but you can find your IPv6 below your IPv4 address above if needed.</div>
     </div>
   </div>
 
@@ -287,8 +393,16 @@
     var copyBtn = document.getElementById("copy-btn");
     var copyText = document.getElementById("copy-text");
     var copyIcon = document.getElementById("copy-icon");
+    var ipLabel = document.querySelector(".ip-label");
+    var ipv6Toggle = document.getElementById("ipv6-toggle");
+    var ipv6Panel = document.getElementById("ipv6-panel");
+    var ipv6Display = document.getElementById("ipv6-display");
+    var ipv6CopyBtn = document.getElementById("ipv6-copy-btn");
+    var ipv6CopyText = document.getElementById("ipv6-copy-text");
+    var ipv6CopyIcon = document.getElementById("ipv6-copy-icon");
 
     var currentIP = null;
+    var currentIPv6 = null;
 
     var copySVG =
       '<rect x="9" y="9" width="13" height="13" rx="2"/>' +
@@ -304,6 +418,49 @@
       ipDisplay.classList.add("error-message");
     }
 
+    function fetchIPv6() {
+      var controller = new AbortController();
+      var timeoutId = setTimeout(function () { controller.abort(); }, 5000);
+
+      fetch("https://api6.ipify.org?format=json", { signal: controller.signal })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          clearTimeout(timeoutId);
+          if (data.ip && data.ip.includes(":")) {
+            currentIPv6 = data.ip;
+            ipv6Display.textContent = currentIPv6;
+            ipv6Toggle.style.visibility = "visible";
+          }
+        })
+        .catch(function () {
+          clearTimeout(timeoutId);
+        });
+    }
+
+    ipv6Toggle.addEventListener("click", function () {
+      ipv6Panel.style.display = "";
+      ipv6Panel.style.animation = "fade-up 0.4s var(--ease-out-quart) both";
+      ipv6Toggle.style.display = "none";
+    });
+
+    ipv6CopyBtn.addEventListener("click", function () {
+      if (!currentIPv6) return;
+      copyToClipboard(currentIPv6)
+        .then(function () {
+          ipv6CopyBtn.classList.add("copied");
+          ipv6CopyIcon.innerHTML = checkSVG;
+          ipv6CopyText.textContent = "Copied!";
+          setTimeout(function () {
+            ipv6CopyBtn.classList.remove("copied");
+            ipv6CopyIcon.innerHTML = copySVG;
+            ipv6CopyText.textContent = "Copy IPv6";
+          }, 2000);
+        })
+        .catch(function () {
+          ipv6CopyText.textContent = "Couldn\u2019t copy \u2014 try selecting and copying manually";
+        });
+    });
+
     function fetchIP() {
       fetch("/api/ip")
         .then(function (res) { return res.json(); })
@@ -312,6 +469,16 @@
             currentIP = data.ipv4;
             ipDisplay.classList.remove("loading");
             ipDisplay.textContent = currentIP;
+            ipDisplay.classList.add("revealed");
+            copyBtn.disabled = false;
+            fetchIPv6();
+          } else if (data.ipv6) {
+            currentIP = data.ipv6;
+            ipLabel.textContent = "Your IPv6 Address";
+            ipDisplay.classList.remove("loading");
+            ipDisplay.textContent = currentIP;
+            ipDisplay.style.fontSize = "1.4rem";
+            ipDisplay.style.wordBreak = "break-all";
             ipDisplay.classList.add("revealed");
             copyBtn.disabled = false;
           } else {
