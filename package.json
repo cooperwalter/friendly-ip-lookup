@@ -1,0 +1,9 @@
+{
+  "name": "friendly-ip-lookup",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A friendly website that shows your IP address",
+  "devDependencies": {
+    "@vercel/node": "^5.6.15"
+  }
+}
