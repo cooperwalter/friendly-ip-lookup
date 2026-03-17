@@ -8,11 +8,11 @@ A simple, playful, friendly single-page website that shows the visitor's IPv4 ad
 - No scary messages about location exposure
 - No upsells or ads
 - No IPv6 display (API is structured to support it later)
-- No framework, build step, or dependencies
+- No framework, build step, or runtime dependencies (`@vercel/node` as a dev dependency for TypeScript types is fine)
 
 ## Architecture
 
-Static HTML + Vercel Serverless Function. Two core files, zero `node_modules`.
+Static HTML + Vercel Serverless Function. Two core files, zero runtime dependencies. `@vercel/node` as a dev dependency for TypeScript types in the editor.
 
 ```
 friendly-ip-lookup/
@@ -21,7 +21,7 @@ friendly-ip-lookup/
 ├── api/
 │   └── ip.ts             ← Vercel Serverless Function, returns visitor's IPv4
 ├── vercel.json            ← Minimal config
-└── package.json           ← Metadata only, no dependencies
+└── package.json           ← Metadata, @vercel/node dev dependency
 ```
 
 ### Request Flow
@@ -39,8 +39,6 @@ friendly-ip-lookup/
 - Read `x-forwarded-for` header (Vercel populates this automatically)
 - If the header contains multiple IPs (comma-separated from proxies), take the first one (the original client)
 - If the IP is an IPv6-mapped IPv4 (like `::ffff:192.168.1.1`), strip the prefix to return clean IPv4
-- Set CORS headers to allow only same-origin requests
-
 **Response:**
 ```json
 { "ipv4": "203.0.113.42" }
